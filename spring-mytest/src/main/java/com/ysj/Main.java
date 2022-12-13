@@ -19,6 +19,7 @@ public class Main {
 //		applicationContext.addBeanFactoryPostProcessor(new CBfrpp());
 //		applicationContext.register(AppConfig.class);
 //		applicationContext.refresh();
+		//test
 	}
 
 }
