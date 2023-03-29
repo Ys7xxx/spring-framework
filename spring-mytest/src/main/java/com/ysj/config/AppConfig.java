@@ -7,7 +7,7 @@ import org.springframework.core.annotation.AliasFor;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
-@ComponentScan("com.ysj.beanfactory")
-@Component("myappconfig")
+@Component
+@Configuration
 public class AppConfig {
 }

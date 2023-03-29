@@ -165,6 +165,7 @@ public class StandardAnnotationMetadata extends StandardClassMetadata implements
 
 
 	private static boolean isAnnotatedMethod(Method method, String annotationName) {
+		//非桥接方法   并且 注解数量大于0  并且  存在@Bean注解
 		return !method.isBridge() && method.getAnnotations().length > 0 &&
 				AnnotatedElementUtils.isAnnotated(method, annotationName);
 	}

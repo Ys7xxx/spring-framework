@@ -313,6 +313,8 @@ public abstract class AnnotationConfigUtils {
 
 		Set<AnnotationAttributes> result = new LinkedHashSet<>();
 
+		//getAnnotationAttributes
+		// 工具方法，用于检索一个注解的属性值。它接受一个参数 `annotationName`，它是要检索属性的注解的完全限定名。
 		// Direct annotation present?
 		addAttributesIfNotNull(result, metadata.getAnnotationAttributes(annotationClassName));
 

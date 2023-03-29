@@ -109,13 +109,15 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	 * Constant that indicates dependency checking for object references.
 	 * @see #setDependencyCheck
 	 */
+	//对象
 	public static final int DEPENDENCY_CHECK_OBJECTS = 1;
 
 	/**
-	 * Constant that indicates dependency checking for "simple" properties.
+	 * constant that indicates dependency checking for "simple" properties.
 	 * @see #setDependencyCheck
 	 * @see org.springframework.beans.BeanUtils#isSimpleProperty
 	 */
+	// 对原始类型
 	public static final int DEPENDENCY_CHECK_SIMPLE = 2;
 
 	/**
@@ -123,6 +125,7 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	 * (object references as well as "simple" properties).
 	 * @see #setDependencyCheck
 	 */
+	//所有
 	public static final int DEPENDENCY_CHECK_ALL = 3;
 
 	/**
@@ -367,7 +370,10 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 		if (lazyInit != null) {
 			setLazyInit(lazyInit);
 		}
+		//设置自动装配模式 为NO
+		// 可以看出@Autowirde不是真正的自动装配 而是在AutowiredAnnotationBeanPostProcessor.AutowiredFieldElement中set注入
 		setAutowireMode(defaults.getAutowireMode());
+		//依赖检查
 		setDependencyCheck(defaults.getDependencyCheck());
 		setInitMethodName(defaults.getInitMethodName());
 		setEnforceInitMethod(false);

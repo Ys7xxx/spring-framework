@@ -86,19 +86,37 @@ abstract class ConfigurationClassUtils {
 			BeanDefinition beanDef, MetadataReaderFactory metadataReaderFactory) {
 
 		String className = beanDef.getBeanClassName();
+		/**
+		 * 获取下类名,如果类名为空或者该类为工厂类
+		 * 1.如果BeanDefinition 没有beanClass属性
+		 * 1.1该BeanDefinition是一个父类bd 让其他BeanDefinition来继承自己
+		 * 1.2factory-bean配合factory-method（工厂方法）创建出来的bean对应的BeanDefinition
+		 * 2.如果BeanDefinition 有className属性
+		 * 2.1静态工厂方式 有beanClass 以及工厂方法factory-method
+		 *
+		 * 总结:如果BeanDefinition 没有BeanClass 那么一定不是配置类的BeanDefinition
+		 * 如果BeanDefinition的factoryMethodName属性不为null 一定不是配置类的BeanDefinition
+		 */
 		if (className == null || beanDef.getFactoryMethodName() != null) {
 			return false;
 		}
-
+		// 下面这一段都是为了获取一个AnnotationMetadata
+		// AnnotationMetadata包含了对应class上的注解元信息以及class元信息
 		AnnotationMetadata metadata;
+		//e.g. 自己配置的注解类(真实类型为AnnotatedGenericBeanDefinition) 是AnnotatedBeanDefinition类型 走这个分支
+		//先判断是是否AnnotatedBeanDefinition类型（可能同时也是AbstractBeanDefinition类型）
 		if (beanDef instanceof AnnotatedBeanDefinition &&
 				className.equals(((AnnotatedBeanDefinition) beanDef).getMetadata().getClassName())) {
 			// Can reuse the pre-parsed metadata from the given BeanDefinition...
 			metadata = ((AnnotatedBeanDefinition) beanDef).getMetadata();
 		}
+		//Spring在创建AnnotatedBeanDefinitionReader对象的时候
+		// Spring已经往容器中注册了5个内置的BeanDefinition（见registerAnnotationConfigProcessors方法）
+		// 真实类型为RootBeanDefinition
 		else if (beanDef instanceof AbstractBeanDefinition && ((AbstractBeanDefinition) beanDef).hasBeanClass()) {
 			// Check already loaded Class if present...
 			// since we possibly can't even load the class file for this Class.
+			// spring内置的几个工厂后置处理器，不认为是配置类，直接返回false
 			Class<?> beanClass = ((AbstractBeanDefinition) beanDef).getBeanClass();
 			if (BeanFactoryPostProcessor.class.isAssignableFrom(beanClass) ||
 					BeanPostProcessor.class.isAssignableFrom(beanClass) ||
@@ -106,9 +124,11 @@ abstract class ConfigurationClassUtils {
 					EventListenerFactory.class.isAssignableFrom(beanClass)) {
 				return false;
 			}
+			//转换为StandardAnnotationMetadata
 			metadata = AnnotationMetadata.introspect(beanClass);
 		}
 		else {
+			//尝试获取元数据对象，这里可能获取失败，如果失败的话则会抛出异常，告诉外部这个BeanDefinition不是配置类的BeanDefinition。
 			try {
 				MetadataReader metadataReader = metadataReaderFactory.getMetadataReader(className);
 				metadata = metadataReader.getAnnotationMetadata();
@@ -121,11 +141,19 @@ abstract class ConfigurationClassUtils {
 				return false;
 			}
 		}
-
+		//获取@Configuration注解的属性  如果该map为空则说明没有该注解
 		Map<String, Object> config = metadata.getAnnotationAttributes(Configuration.class.getName());
+		/**
+		 * 如果 config 不为null  并且proxyBeanMethods 不为false （默认为true）
+		 * 则给该bd的attribute的map中 添加 key为一大长串上面说的  value为full
+		 */
 		if (config != null && !Boolean.FALSE.equals(config.get("proxyBeanMethods"))) {
 			beanDef.setAttribute(CONFIGURATION_CLASS_ATTRIBUTE, CONFIGURATION_CLASS_FULL);
 		}
+		/**
+		 * 存在@Configuration注解，但proxyBeanMethods属性为false   或者  isConfigurationCandidate(metadata)进入该分支
+		 * 该bd的attribute的map中 添加 key为一大长串上面说的  value为lite
+		 */
 		else if (config != null || isConfigurationCandidate(metadata)) {
 			beanDef.setAttribute(CONFIGURATION_CLASS_ATTRIBUTE, CONFIGURATION_CLASS_LITE);
 		}
@@ -134,6 +162,7 @@ abstract class ConfigurationClassUtils {
 		}
 
 		// It's a full or lite configuration candidate... Let's determine the order value, if any.
+		//获取是否有@Order  为该bd的ttribute的map中设置order相关的值
 		Integer order = getOrder(metadata);
 		if (order != null) {
 			beanDef.setAttribute(ORDER_ATTRIBUTE, order);
@@ -151,11 +180,20 @@ abstract class ConfigurationClassUtils {
 	 */
 	public static boolean isConfigurationCandidate(AnnotationMetadata metadata) {
 		// Do not consider an interface or an annotation...
+		//不要考虑接口或注释
 		if (metadata.isInterface()) {
 			return false;
 		}
 
 		// Any of the typical annotations found?
+		/**
+		 * {@link #candidateIndicators}
+		 * 在静态代码块中会添加四种是配置类的注解
+		 * candidateIndicators.add(Component.class.getName());
+		 * candidateIndicators.add(ComponentScan.class.getName());
+		 * candidateIndicators.add(Import.class.getName());
+		 * candidateIndicators.add(ImportResource.class.getName());
+		 */
 		for (String indicator : candidateIndicators) {
 			if (metadata.isAnnotated(indicator)) {
 				return true;
@@ -163,6 +201,7 @@ abstract class ConfigurationClassUtils {
 		}
 
 		// Finally, let's look for @Bean methods...
+		//最后，让我们寻找@Bean方法
 		return hasBeanMethods(metadata);
 	}
 

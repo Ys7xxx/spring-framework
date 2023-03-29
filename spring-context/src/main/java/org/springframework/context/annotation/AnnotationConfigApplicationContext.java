@@ -75,7 +75,6 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 		 * 完成了spring内部BeanDefinition的注册（主要是后置处理器）
 		 */
 		this.reader = new AnnotatedBeanDefinitionReader(this);
-		String[] beanDefinitionNames = this.reader.getRegistry().getBeanDefinitionNames();
 		createAnnotatedBeanDefReader.end();
 		this.scanner = new ClassPathBeanDefinitionScanner(this);
 	}

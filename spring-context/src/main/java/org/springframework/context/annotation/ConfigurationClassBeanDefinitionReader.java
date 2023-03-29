@@ -144,15 +144,17 @@ class ConfigurationClassBeanDefinitionReader {
 			this.importRegistry.removeImportingClass(configClass.getMetadata().getClassName());
 			return;
 		}
-
+		// 注册 @Import 导入的普通 bean , 或者 ImportSelector 导入的普通bean
 		if (configClass.isImported()) {
 			registerBeanDefinitionForImportedConfigurationClass(configClass);
 		}
+		//@Bean 的注册
 		for (BeanMethod beanMethod : configClass.getBeanMethods()) {
 			loadBeanDefinitionsForBeanMethod(beanMethod);
 		}
-
+		//xml
 		loadBeanDefinitionsFromImportedResources(configClass.getImportedResources());
+		//注册ImportBeanDefinitionRegistrars
 		loadBeanDefinitionsFromRegistrars(configClass.getImportBeanDefinitionRegistrars());
 	}
 
